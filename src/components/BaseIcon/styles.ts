@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {FontSizes, wp} from '../../utils';
+import {AppColors, FontSizes, wp} from '../../utils';
 
 export const styles = StyleSheet.create({
   container: {
@@ -8,7 +8,7 @@ export const styles = StyleSheet.create({
     rowGap: wp(1),
   },
   titleStyle: {
-    color: 'white',
-    fontSize: FontSizes.FONT_12,
+    color: AppColors.SECONDARY_TEXT,
+    fontSize: FontSizes.FONT_13,
   },
 });

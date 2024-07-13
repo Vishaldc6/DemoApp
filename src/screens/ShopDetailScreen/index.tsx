@@ -1,129 +1,35 @@
-const DiscountData = [
-  {
-    id: 1,
-    title: '50% off',
-    subTitle: 'use code FREE50',
-  },
-  {
-    id: 2,
-    title: '60% off on Debit Card',
-    subTitle: 'No coupon required',
-  },
-];
-
-const CategoryData = [
-  {
-    id: 1,
-    title: 'Recommended',
-  },
-  {
-    id: 2,
-    title: 'Packages',
-  },
-  {
-    id: 3,
-    title: 'Face Care',
-  },
-  {
-    id: 4,
-    title: 'Packages',
-  },
-];
-
-const SectionDataList = [
-  {
-    title: 'Recommended',
-    data: [
-      {
-        id: 1,
-        image: AppImages.IMAGE1,
-        title: 'Haircut',
-        price: 40,
-        duration: 40,
-      },
-      {
-        id: 2,
-        image: AppImages.IMAGE2,
-        title: 'Body Massage',
-        price: 40,
-        duration: 20,
-      },
-      {
-        id: 3,
-        image: AppImages.IMAGE3,
-        title: 'Active Detox Cleanup',
-        price: 40,
-        duration: 10,
-      },
-    ],
-  },
-  {
-    title: 'Packages',
-    data: [
-      {
-        id: 4,
-        image: AppImages.IMAGE4,
-        title: 'Haircut & Shave',
-        price: 40,
-        duration: 40,
-      },
-      {
-        id: 5,
-        image: AppImages.IMAGE5,
-        title: 'Haircut & Beard Grooming',
-        price: 40,
-        duration: 40,
-      },
-    ],
-  },
-  {
-    title: 'Face Care',
-    data: [
-      {
-        id: 6,
-        image: AppImages.IMAGE2,
-        title: 'Haircut & Shave',
-        price: 40,
-        duration: 40,
-      },
-      {
-        id: 7,
-        image: AppImages.IMAGE6,
-        title: 'Haircut & Beard Grooming',
-        price: 40,
-        duration: 40,
-      },
-    ],
-  },
-];
-
+import React, {memo, useCallback, useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
   ImageBackground,
-  LogBox,
   ScrollView,
   SectionList,
+  SectionListData,
   StatusBar,
-  StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {RFValue} from 'react-native-responsive-fontsize';
 import Icon from 'react-native-vector-icons/Feather';
 
-import {BaseHeader, BaseIcon, FloatingButoon} from '../../components';
-import {AppImages, hp, wp} from '../../utils';
+import {BaseHeader, BaseIcon, BaseText, FloatingButoon} from '../../components';
+import {AppColors, AppImages, FontSizes, wp} from '../../utils';
 import {styles} from './styles';
+
+import {
+  CategoryData,
+  DataType,
+  DiscountData,
+  SectionDataList,
+  SectionDataListType,
+} from '../../utils/dummyData';
 
 const ShopDetailScreen = () => {
   const [selectedTabId, setSelectedTabId] = useState(1);
   const [count, setCount] = useState<Number>(0);
   const [totalPrice, setTotalPrice] = useState<Number>(0);
 
-  const [selectedList, setSelectedList] = useState([]);
+  const [selectedList, setSelectedList] = useState<DataType[]>([]);
 
   useEffect(() => {
     setCount(selectedList.length);
@@ -131,62 +37,123 @@ const ShopDetailScreen = () => {
     selectedList.map(val => {
       res += val?.price;
     });
-    console.log({res});
     setTotalPrice(res);
   }, [selectedList]);
 
+  const SectionHeader = memo(
+    ({section}: {section: SectionListData<DataType, SectionDataListType>}) => (
+      <BaseText style={styles.sectionText}>
+        {section?.title}&nbsp;({section?.data?.length})
+      </BaseText>
+    ),
+  );
+
+  const ServiceCard = useCallback(
+    ({item}: {item: DataType}) => (
+      <View style={styles.serviceContainer}>
+        <Image source={item?.image} style={styles.serviceImage} />
+        <View style={styles.serviceDetailContainer}>
+          <View style={{flex: 1}}>
+            <BaseText style={styles.serviceText} numberOfLines={3}>
+              {item?.title}
+            </BaseText>
+            <BaseText>${item?.price}</BaseText>
+          </View>
+          <View style={styles.serviceDurationContainer}>
+            <Icon
+              name="clock"
+              size={FontSizes.FONT_14}
+              style={{marginRight: wp(1)}}
+            />
+            <BaseText style={{fontSize: FontSizes.FONT_12}}>
+              {item?.duration}&nbsp;Mins
+            </BaseText>
+          </View>
+        </View>
+
+        <View>
+          <View style={styles.selectedServiceButtonContainer}>
+            {selectedList.includes(item) && (
+              <TouchableOpacity
+                onPress={() =>
+                  setSelectedList(prev =>
+                    prev.filter(value => value?.id !== item?.id),
+                  )
+                }
+                style={styles.removeButton}>
+                <Icon
+                  name="minus"
+                  size={FontSizes.FONT_14}
+                  color={AppColors.SECONDARY_TEXT}
+                />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              disabled={selectedList.includes(item)}
+              onPress={() => setSelectedList(prev => [...prev, item])}
+              style={
+                selectedList.includes(item)
+                  ? styles.selectedServiceContainer
+                  : styles.addServiceButton
+              }>
+              <BaseText
+                style={{
+                  color: selectedList.includes(item)
+                    ? AppColors.SECONDARY_TEXT
+                    : AppColors.PRIMARY,
+                }}>
+                {selectedList.includes(item) ? 'Selected' : 'Select'}
+              </BaseText>
+              {!selectedList.includes(item) && (
+                <Icon
+                  name={'plus'}
+                  size={FontSizes.FONT_14}
+                  color={AppColors.PRIMARY}
+                  style={{marginHorizontal: wp(0.5)}}
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    ),
+    [selectedList],
+  );
+
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: '#f2f1f6',
-      }}>
-      <ScrollView nestedScrollEnabled>
+    <View style={styles.mainContainer}>
+      <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <StatusBar
-          backgroundColor="transparent"
+          backgroundColor={AppColors.TRANSPARENT}
           translucent
           barStyle={'light-content'}
         />
 
         <ImageBackground
           source={AppImages.IMAGE1}
-          style={{
-            height: hp(45),
-            // justifyContent: "flex-end",
-            justifyContent: 'space-between',
-            padding: wp(7),
-          }}>
+          style={styles.imageBackground}>
           {/* header */}
           <BaseHeader leftIcon="arrow-left" rightIcon="search" />
-          <View>
-            <Text
-              style={{
-                color: 'white',
-              }}
-              numberOfLines={1}>
+          <View style={styles.shopDetailsContainer}>
+            <BaseText style={styles.shopSubTitleText} numberOfLines={1}>
               FOR MEN
-            </Text>
+            </BaseText>
 
-            <View
-              style={{
-                flexDirection: 'row',
-              }}>
+            <View style={{flexDirection: 'row'}}>
               <View style={{flex: 1}}>
-                <Text
-                  style={{
-                    color: 'white',
-                    fontSize: RFValue(24),
-                    fontWeight: '600',
-                  }}
-                  numberOfLines={2}>
+                <BaseText style={styles.shopTitleText} numberOfLines={2}>
                   Woodlands Hills SPA
-                </Text>
-                <Text
-                  style={{
-                    color: 'white',
-                  }}>
-                  Keira throughway * 5.0 Kms * $$
-                </Text>
+                </BaseText>
+                <View style={{flexDirection: 'row', columnGap: wp(1.5)}}>
+                  <BaseText style={styles.shopDetailsText}>
+                    Keira throughway
+                  </BaseText>
+                  <BaseText style={styles.shopDetailsText}>•</BaseText>
+                  <BaseText style={styles.shopDetailsText}>5.0 Kms</BaseText>
+                  <BaseText style={styles.shopDetailsText}>•</BaseText>
+                  <BaseText style={styles.shopDetailsText}>$$</BaseText>
+                </View>
               </View>
 
               {/* fav icon */}
@@ -195,139 +162,72 @@ const ShopDetailScreen = () => {
           </View>
         </ImageBackground>
 
-        <View
-          style={{
-            backgroundColor: 'white',
-            paddingVertical: wp(7),
-          }}>
-          <View
-            style={{
-              paddingHorizontal: wp(7),
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
+        <View style={styles.actionContainer}>
+          <View style={styles.actionSubContainer}>
             {/* options (call,dir,share) */}
-            <View
-              style={{
-                flex: 1,
-                flexDirection: 'row',
-                columnGap: wp(5),
-                // justifyContent: "space-around",
-              }}>
+            <View style={styles.optionsIconRowContainer}>
               <BaseIcon
                 icon="phone"
                 iconTitle="Call"
-                iconColor="black"
-                titleStyle={{
-                  color: 'black',
-                }}
+                iconColor={AppColors.PRIMARY_TEXT}
+                titleStyle={styles.iconTitle}
               />
               <BaseIcon
                 icon="map-pin"
                 iconTitle="Directions"
-                iconColor="black"
-                titleStyle={{
-                  color: 'black',
-                }}
+                iconColor={AppColors.PRIMARY_TEXT}
+                titleStyle={styles.iconTitle}
               />
               <BaseIcon
                 icon="share"
                 iconTitle="Share"
-                iconColor="black"
-                titleStyle={{
-                  color: 'black',
-                }}
+                iconColor={AppColors.PRIMARY_TEXT}
+                titleStyle={styles.iconTitle}
               />
             </View>
 
             {/* rating */}
-            <View
-              style={{
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderRadius: wp(2),
-                  flexDirection: 'row',
-                  padding: wp(1.5),
-                  paddingHorizontal: wp(3),
-                  alignItems: 'center',
-                  borderColor: '#2765ba',
-                }}>
+            <View style={styles.ratingContainer}>
+              <View style={styles.rateContainer}>
                 {/* star icon */}
                 <Icon
                   name={'star'}
-                  size={RFValue(18)}
+                  size={FontSizes.FONT_18}
                   style={{marginRight: '8%'}}
-                  color={'#2765ba'}
+                  color={AppColors.BORDER}
                 />
-                <Text
-                  style={{
-                    fontSize: RFValue(14),
-                    color: '#2765ba',
-                    fontWeight: '600',
-                  }}>
-                  4.2
-                </Text>
+                <BaseText style={styles.rateText}>4.2</BaseText>
               </View>
-              <Text style={{fontSize: RFValue(12), color: '#2765ba'}}>
-                5k+ ratings
-              </Text>
+              <BaseText style={styles.ratingText}>5k+ ratings</BaseText>
             </View>
           </View>
 
           {/* seperator */}
-          <View
-            style={{
-              borderTopWidth: 1,
-              borderStyle: 'dashed',
-              marginHorizontal: wp(7),
-              marginVertical: wp(5),
-            }}
-          />
+          <View style={styles.dashedSeperator} />
 
           {/* discount */}
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
-            data={[...DiscountData, ...DiscountData]}
-            contentContainerStyle={{
-              paddingHorizontal: wp(5),
-            }}
+            data={DiscountData}
+            contentContainerStyle={styles.discountScrollContainer}
             renderItem={({item}) => (
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#acabb0',
-                  borderRadius: 5,
-                  paddingVertical: wp(2),
-                  paddingHorizontal: wp(4),
-                  marginRight: wp(3),
-                }}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <View style={styles.discountContainer}>
+                <View style={styles.discountTitleContainer}>
                   {/* dicount icon */}
                   <Icon
                     name="percent"
-                    size={RFValue(20)}
+                    size={FontSizes.FONT_20}
                     style={{marginRight: wp(2)}}
-                    color={'#643ffe'}
+                    color={AppColors.PRIMARY}
                   />
-                  <Text
-                    style={{
-                      fontSize: RFValue(20),
-                      fontWeight: '700',
-                    }}>
+                  <BaseText style={styles.discountTitle}>
                     {item?.title}
-                  </Text>
+                  </BaseText>
                 </View>
-                <Text
-                  style={{
-                    fontSize: RFValue(12),
-                  }}>
+                <BaseText style={styles.discountSubTitle}>
                   {item?.subTitle}
-                </Text>
+                </BaseText>
               </View>
             )}
           />
@@ -338,181 +238,36 @@ const ShopDetailScreen = () => {
           horizontal
           showsHorizontalScrollIndicator={false}
           data={CategoryData}
-          style={{
-            backgroundColor: 'white',
-            marginVertical: hp(2),
-          }}
-          contentContainerStyle={{
-            paddingVertical: hp(2),
-            paddingHorizontal: wp(4),
-          }}
+          style={styles.categoryListContainer}
+          contentContainerStyle={styles.categoryListContentContainer}
           renderItem={({item}) => (
             <TouchableOpacity
               onPress={() => setSelectedTabId(item?.id)}
               style={[
-                {
-                  borderWidth: 1,
-                  borderRadius: wp(2),
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  paddingHorizontal: wp(4),
-                  paddingVertical: wp(2),
-                  marginRight: wp(2),
-                  borderColor: '#acabb0',
-                },
-                selectedTabId === item?.id && {
-                  backgroundColor: '#f2f0fd',
-                  borderColor: 'transparent',
-                },
+                styles.categoryTabContainer,
+                selectedTabId === item?.id &&
+                  styles.selectedCategoryTabContainer,
               ]}>
-              <Text
+              <BaseText
                 style={[
-                  {
-                    color: '##acabb0',
-                    fontWeight: '600',
-                  },
-                  selectedTabId === item?.id && {
-                    color: '#643ffe',
-                  },
+                  styles.categoryTabText,
+                  selectedTabId === item?.id && styles.selectedCategoryTabText,
                 ]}>
                 {item?.title}
-              </Text>
+              </BaseText>
             </TouchableOpacity>
           )}
         />
 
         <SectionList
           sections={SectionDataList}
-          contentContainerStyle={{
-            paddingHorizontal: wp(8),
-            paddingBottom: hp(15),
-          }}
-          renderItem={({item}) => (
-            <View
-              style={{
-                flexDirection: 'row',
-                paddingVertical: wp(4),
-              }}>
-              <Image
-                source={item?.image}
-                style={{height: wp(22), width: wp(22), borderRadius: wp(3)}}
-              />
-              <View style={{flex: 1, marginHorizontal: wp(2)}}>
-                <View
-                  style={{
-                    flex: 1,
-                  }}>
-                  <Text
-                    style={{
-                      fontWeight: '600',
-                      fontSize: RFValue(16),
-                    }}
-                    numberOfLines={3}>
-                    {item?.title}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: RFValue(14),
-                    }}>
-                    ${item?.price}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}>
-                  <Icon
-                    name="clock"
-                    size={RFValue(14)}
-                    style={{marginRight: wp(1)}}
-                  />
-                  <Text style={{fontSize: RFValue(12)}}>
-                    {item?.duration}&nbsp;Mins
-                  </Text>
-                </View>
-              </View>
-
-              <View>
-                {selectedList.includes(item) ? (
-                  <View style={{flexDirection: 'row', columnGap: wp(1)}}>
-                    <TouchableOpacity
-                      onPress={() =>
-                        setSelectedList(prev =>
-                          prev.filter(value => value?.id !== item?.id),
-                        )
-                      }
-                      style={{
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: wp(2),
-                        backgroundColor: '#643ffe',
-                        borderRadius: wp(2),
-                      }}>
-                      <Icon name="minus" size={RFValue(14)} color={'white'} />
-                    </TouchableOpacity>
-                    <View
-                      style={{
-                        backgroundColor: '#643ffe',
-                        paddingHorizontal: wp(2),
-                        paddingVertical: wp(1),
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        borderRadius: wp(2),
-                      }}>
-                      <Text
-                        style={{
-                          color: 'white',
-                          fontSize: RFValue(14),
-                        }}>
-                        {'Selected'}
-                      </Text>
-                    </View>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => setSelectedList(prev => [...prev, item])}
-                    style={{
-                      backgroundColor: 'white',
-                      borderWidth: 0.5,
-                      paddingHorizontal: wp(2),
-                      paddingVertical: wp(1),
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}>
-                    <Text
-                      style={{
-                        fontSize: RFValue(14),
-                      }}>
-                      {'Select'}
-                    </Text>
-                    <Icon
-                      name={'plus'}
-                      size={RFValue(14)}
-                      style={{marginHorizontal: wp(0.5)}}
-                    />
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          )}
+          contentContainerStyle={styles.sectionListContainer}
+          renderItem={({item}) => <ServiceCard item={item} />}
           renderSectionHeader={({section}) => (
-            <Text
-              style={{
-                fontSize: RFValue(19),
-                fontWeight: '600',
-                marginVertical: hp(1),
-              }}>
-              {section?.title}&nbsp;({section?.data?.length})
-            </Text>
+            <SectionHeader section={section} />
           )}
           ItemSeparatorComponent={() => (
-            <View
-              style={{
-                backgroundColor: '#dedde3',
-                height: StyleSheet.hairlineWidth,
-              }}
-            />
+            <View style={styles.serviceSeperator} />
           )}
         />
       </ScrollView>
@@ -522,73 +277,19 @@ const ShopDetailScreen = () => {
 
       {/* floating container */}
       {count ? (
-        <View
-          style={{
-            backgroundColor: '#643ffe',
-            elevation: 2,
-            zIndex: 9999999999,
-            position: 'absolute',
-            right: wp(8),
-            left: wp(8),
-            bottom: wp(5),
-            paddingHorizontal: wp(5),
-            paddingVertical: hp(1.5),
-            flexDirection: 'row',
-            alignItems: 'center',
-            borderRadius: wp(3),
-            flex: 1,
-          }}>
-          <View
-            style={{
-              borderWidth: 1,
-              borderRadius: 5,
-              borderColor: 'white',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: wp(12),
-              width: wp(12),
-              // paddingHorizontal: wp(5),
-            }}>
-            <Text
-              style={{
-                fontWeight: '600',
-                color: 'white',
-                fontSize: RFValue(20),
-              }}>
-              {count?.toString()}
-            </Text>
+        <View style={styles.floatingContainer}>
+          <View style={styles.serviceCountContainer}>
+            <BaseText style={styles.serviceCount}>{count?.toString()}</BaseText>
           </View>
 
-          <View
-            style={{
-              flex: 1,
-              marginHorizontal: wp(5),
-            }}>
-            <Text
-              style={{
-                fontWeight: '600',
-                color: 'white',
-                fontSize: RFValue(20),
-              }}>
+          <View style={styles.totalPriceContainer}>
+            <BaseText style={styles.totalPrice}>
               ${totalPrice.toString()}
-            </Text>
-            <Text
-              style={{
-                fontWeight: '300',
-                color: 'white',
-              }}>
-              plus taxes
-            </Text>
+            </BaseText>
+            <BaseText style={styles.totalPriceSubText}>plus taxes</BaseText>
           </View>
 
-          <Text
-            style={{
-              fontWeight: '600',
-              color: 'white',
-              fontSize: RFValue(20),
-            }}>
-            Next
-          </Text>
+          <BaseText style={styles.floatingActionText}>Next</BaseText>
         </View>
       ) : null}
     </View>

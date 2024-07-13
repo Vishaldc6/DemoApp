@@ -1,8 +1,9 @@
 import React, {ReactNode} from 'react';
-import {View, ViewStyle} from 'react-native';// import Icon from '@expo/vector-icons/Feather';
+import {View, ViewStyle} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-import {FontSizes} from '../../utils';
+import {AppColors, FontSizes, wp} from '../../utils';
 import {styles} from './styles';
 
 interface BaseHeaderProps {
@@ -15,15 +16,22 @@ interface BaseHeaderProps {
   rightComponent?: ReactNode;
 }
 const BaseHeader = (props: BaseHeaderProps) => {
+  const {top} = useSafeAreaInsets();
+
   return (
-    <View style={[styles.container, props.containerStyle]}>
+    <View
+      style={[
+        {paddingTop: top + wp(3)},
+        styles.container,
+        props.containerStyle,
+      ]}>
       {props?.leftComponent ?? (
-        <Icon name={props?.leftIcon} color={'white'} size={FontSizes.FONT_30} />
+        <Icon name={props?.leftIcon} color={AppColors.SECONDARY_TEXT} size={FontSizes.FONT_30} />
       )}
       {props?.rightComponent ?? (
         <Icon
           name={props?.rightIcon}
-          color={'white'}
+          color={AppColors.SECONDARY_TEXT}
           size={FontSizes.FONT_30}
         />
       )}
